@@ -1,12 +1,11 @@
-from dotenv import load_dotenv
+
 import google.generativeai as gen_ai
 import os 
 import streamlit as st
 import pyttsx3
 import threading
 
-# Load the .env file
-load_dotenv()
+
 
 st.set_page_config(
     page_title="APEX",
