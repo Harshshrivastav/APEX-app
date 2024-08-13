@@ -1,10 +1,8 @@
-
 import google.generativeai as gen_ai
 import os 
 import streamlit as st
 import pyttsx3
 import threading
-
 
 
 st.set_page_config(
