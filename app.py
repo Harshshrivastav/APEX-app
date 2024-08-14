@@ -1,9 +1,10 @@
 import google.generativeai as gen_ai
 import os 
 import streamlit as st
-import pyttsx3
+from gtts import gTTS
 import threading
-
+import tempfile
+import pygame
 
 st.set_page_config(
     page_title="APEX",
@@ -16,12 +17,6 @@ GOOGLE_API_KEY = 'AIzaSyA6AK_T8QcOzV8i8ZyBgRUfalZ1wjD59sE'
 
 gen_ai.configure(api_key=GOOGLE_API_KEY)
 model = gen_ai.GenerativeModel('gemini-pro')
-
-# Initialize the text-to-speech engine
-try:
-    engine = pyttsx3.init()
-except Exception as e:
-    st.error(f"Error initializing text-to-speech engine: {e}")
 
 # Function to translate roles between Gemini Pro and Streamlit
 def translate_role_for_streamlit(role):
@@ -93,9 +88,11 @@ st.markdown(
 )
 
 # Display chat history
-for message in st.session_state.chat_session.history:
-    with st.chat_message(translate_role_for_streamlit(message.role)):
-        st.markdown(message.parts[0].text)
+if "chat_session" in st.session_state:
+    for message in st.session_state.chat_session.history:
+        role = translate_role_for_streamlit(message.role)
+        with st.chat_message(role):
+            st.markdown(message.parts[0].text)
 
 # User input
 user_prompt = st.chat_input('Ask APEX...')
@@ -120,8 +117,24 @@ if user_prompt:
 # Function to handle text-to-speech in a separate thread
 def speak_text(text):
     try:
-        engine.say(text)
-        engine.runAndWait()
+        tts = gTTS(text)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+            temp_file_path = fp.name
+            tts.save(temp_file_path)
+        
+        # Initialize pygame mixer and play the audio
+        pygame.mixer.init()
+        pygame.mixer.music.load(temp_file_path)
+        pygame.mixer.music.play()
+        
+        # Wait until the audio finishes playing
+        while pygame.mixer.music.get_busy():
+            continue
+        
+        # Delete the temporary file after playback is complete
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
+    
     except Exception as e:
         print(f"Error during text-to-speech: {e}")
 
@@ -129,7 +142,7 @@ def speak_text(text):
 def toggle_speaking():
     if st.session_state.speaking:
         st.session_state.speaking = False
-        engine.stop()
+        pygame.mixer.music.stop()
     else:
         st.session_state.speaking = True
         audio_thread = threading.Thread(target=speak_text, args=(st.session_state.last_response,))
