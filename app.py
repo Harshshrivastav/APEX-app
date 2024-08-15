@@ -5,6 +5,9 @@ from gtts import gTTS
 import threading
 import tempfile
 import pygame
+from dotenv import load_dotenv
+load_dotenv()
+
 
 st.set_page_config(
     page_title="APEX",
@@ -13,7 +16,7 @@ st.set_page_config(
 )
 
 # Set the Google API key
-GOOGLE_API_KEY = 'AIzaSyA6AK_T8QcOzV8i8ZyBgRUfalZ1wjD59sE'
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 gen_ai.configure(api_key=GOOGLE_API_KEY)
 model = gen_ai.GenerativeModel('gemini-pro')
